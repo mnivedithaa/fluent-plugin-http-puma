@@ -1,6 +1,9 @@
+require 'fluent/input'
 module Fluent
   class HttpPumaInput < Input
     Plugin.register_input('http_puma', self)
+    
+    helpers :server
 
     def initialize
       require 'puma'
@@ -16,7 +19,7 @@ module Fluent
     config_param :ssl_keys, :array, :default => nil
     config_param :backlog, :integer, :default => nil
     config_param :format, :string, :default => 'default'
-
+    
     def configure(conf)
       super
 
@@ -31,7 +34,7 @@ module Fluent
     end
 
     def start
-      super
+      server_create(:title, @port) do |data|
 
       # Refer puma's Runner and Rack handler for puma server setup
       @server = ::Puma::Server.new(method(:on_request))
@@ -103,6 +106,10 @@ module Fluent
       end
 
       return OK_RESPONSE
+    end
+
+    def multi_workers_ready?
+      true
     end
 
     private
